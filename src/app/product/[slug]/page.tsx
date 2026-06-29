@@ -328,19 +328,88 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       : { container: "bg-rose-50 border-rose-200 text-rose-700", star: "fill-rose-500 text-rose-500" };
 
   const priceNumeric = product.price ? parseFloat(product.price.replace(/[^\d]/g, "")) || 0 : 0;
-  
+
+  // Helper to parse dates to ISO 8601 (YYYY-MM-DD) format
+  const parseDateToISO = (dateStr: string): string => {
+    if (!dateStr) return new Date().toISOString().split('T')[0];
+    
+    const banglaToEnglish: Record<string, string> = {
+      '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4',
+      '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9'
+    };
+    let cleanDateStr = dateStr.replace(/\u00a0/g, ' ').trim();
+    for (const [bn, en] of Object.entries(banglaToEnglish)) {
+      cleanDateStr = cleanDateStr.replace(new RegExp(bn, 'g'), en);
+    }
+
+    if (cleanDateStr.includes('/')) {
+      const parts = cleanDateStr.split('/');
+      if (parts.length === 3) {
+        if (parts[2].length === 4) {
+          const day = parts[0].padStart(2, '0');
+          const month = parts[1].padStart(2, '0');
+          const year = parts[2];
+          return `${year}-${month}-${day}`;
+        } else if (parts[0].length === 4) {
+          const year = parts[0];
+          const month = parts[1].padStart(2, '0');
+          const day = parts[2].padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        }
+      }
+    }
+
+    const timestamp = Date.parse(cleanDateStr);
+    if (!isNaN(timestamp)) {
+      return new Date(timestamp).toISOString().split('T')[0];
+    }
+    
+    const parts = cleanDateStr.split(/\s+/);
+    if (parts.length === 3) {
+      const day = parts[0].padStart(2, '0');
+      const monthStr = parts[1].toLowerCase();
+      const year = parts[2];
+      
+      const months: Record<string, string> = {
+        jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
+        jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12'
+      };
+      
+      let month = '01';
+      for (const [key, val] of Object.entries(months)) {
+        if (monthStr.startsWith(key)) {
+          month = val;
+          break;
+        }
+      }
+      
+      if (/^\d{4}$/.test(year) && /^\d{1,2}$/.test(day)) {
+        return `${year}-${month}-${day}`;
+      }
+    }
+    
+    return new Date().toISOString().split('T')[0];
+  };
+
   // 1. Product JSON-LD Schema
+  let brandName = "Elakar Bazar";
+  if (product.specifications && (product.specifications as any).brand) {
+    brandName = (product.specifications as any).brand;
+  } else if (product.author) {
+    brandName = product.author;
+  }
+
   const schemaData: any = {
     "@context": "https://schema.org/",
     "@type": "Product",
     "name": product.title,
-    "image": product.image,
+    "image": dbGalleryImages.length > 0 ? dbGalleryImages : [product.image],
     "description": product.description || product.title,
     "sku": product.id,
     "mpn": product.id,
     "brand": {
       "@type": "Brand",
-      "name": product.author || "Elakar Bazar"
+      "name": brandName
     },
     "offers": {
       "@type": "Offer",
@@ -351,7 +420,11 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       "itemCondition": "https://schema.org/NewCondition",
       "availability": product.stockStatus?.toLowerCase().includes("out") 
         ? "https://schema.org/OutOfStock" 
-        : "https://schema.org/InStock"
+        : "https://schema.org/InStock",
+      "seller": {
+        "@type": "Organization",
+        "name": "Elakar Bazar"
+      }
     }
   };
 
@@ -374,7 +447,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         "@type": "Person",
         "name": r.name || "Anonymous"
       },
-      "datePublished": r.date || new Date().toISOString().split('T')[0],
+      "datePublished": parseDateToISO(r.date),
       "reviewBody": r.text || "",
       "reviewRating": {
         "@type": "Rating",
