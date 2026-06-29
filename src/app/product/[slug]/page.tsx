@@ -237,19 +237,55 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     console.error("Error fetching product sub-tables:", err);
   }
 
-  // Get similar products from database (same product_type/category, excluding current product)
+  // Get similar products from database (try specific relations first, then same category_id, then product_type)
   let similarProducts: Product[] = [];
   try {
-    const [similarRows] = await pool.query(`
+    // 1. Fetch related products via product_relations table
+    const [relationRows] = await pool.query(`
       SELECT p.*, a.name as author_name 
-      FROM products p
+      FROM product_relations pr
+      JOIN products p ON pr.related_product_id = p.id
       LEFT JOIN authors a ON p.author_id = a.id
-      WHERE p.product_type = ? AND p.id != ?
-      ORDER BY p.id DESC
+      WHERE pr.product_id = ?
+      ORDER BY FIELD(pr.relation_type, 'related') DESC, p.id DESC
       LIMIT 20
-    `, [product.category, productIdNum]);
+    `, [productIdNum]);
 
-    similarProducts = (similarRows as any[]).map(row => {
+    let fetchedRows = relationRows as any[];
+
+    // 2. If we need more to reach 20, fill with same category_id products
+    if (fetchedRows.length < 20 && product.categoryId) {
+      const excludedIds = [productIdNum, ...fetchedRows.map(r => r.id)];
+      const limit = 20 - fetchedRows.length;
+      const [categoryRows] = await pool.query(`
+        SELECT p.*, a.name as author_name 
+        FROM products p
+        LEFT JOIN authors a ON p.author_id = a.id
+        WHERE p.category_id = ? AND p.id NOT IN (?)
+        ORDER BY p.id DESC
+        LIMIT ?
+      `, [product.categoryId, excludedIds, limit]);
+
+      fetchedRows = [...fetchedRows, ...(categoryRows as any[])];
+    }
+
+    // 3. If we still need more to reach 20, fill with same product_type
+    if (fetchedRows.length < 20) {
+      const excludedIds = [productIdNum, ...fetchedRows.map(r => r.id)];
+      const limit = 20 - fetchedRows.length;
+      const [typeRows] = await pool.query(`
+        SELECT p.*, a.name as author_name 
+        FROM products p
+        LEFT JOIN authors a ON p.author_id = a.id
+        WHERE p.product_type = ? AND p.id NOT IN (?)
+        ORDER BY p.id DESC
+        LIMIT ?
+      `, [product.category, excludedIds, limit]);
+
+      fetchedRows = [...fetchedRows, ...(typeRows as any[])];
+    }
+
+    similarProducts = fetchedRows.map(row => {
       const discountPercentage = row.original_price && row.current_price
         ? Math.round(((Number(row.original_price) - Number(row.current_price)) / Number(row.original_price)) * 100)
         : 0;
