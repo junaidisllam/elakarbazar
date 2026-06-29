@@ -515,10 +515,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     ]
   };
 
-  const h1Text = product.category === 'book'
-    ? `Buy ${product.title} Online in Bangladesh`
-    : `Buy ${product.title} at Best Price in Bangladesh`;
-
   return (
     <main className="w-full bg-zinc-50/50 min-h-screen pt-4 pb-16 font-sans">
       <script
@@ -581,7 +577,9 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             {/* Title & Author */}
             <div className="flex flex-col gap-1">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-zinc-900 leading-tight">
-                {h1Text}
+                <span className="sr-only">Buy </span>
+                {product.title}
+                <span className="sr-only"> {product.category === 'book' ? 'Online in Bangladesh' : 'at Best Price in Bangladesh'}</span>
               </h1>
               {product.author && (
                 <p className="text-xs sm:text-sm text-zinc-500 font-medium">
