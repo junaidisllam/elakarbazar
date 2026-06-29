@@ -399,11 +399,18 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     brandName = product.author;
   }
 
+  const uniqueImages = Array.from(
+    new Set(
+      (dbGalleryImages.length > 0 ? dbGalleryImages : [product.image])
+        .map(img => img.replace('/260X372/', '/1104X1581/'))
+    )
+  );
+
   const schemaData: any = {
     "@context": "https://schema.org/",
     "@type": "Product",
     "name": product.title,
-    "image": dbGalleryImages.length > 0 ? dbGalleryImages : [product.image],
+    "image": uniqueImages,
     "description": product.description || product.title,
     "sku": product.id,
     "mpn": product.id,
