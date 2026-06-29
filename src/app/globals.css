@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Disable dark mode completely by pointing the custom variant to a non-existent selector */
+@custom-variant dark (.never-match-dark);
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -8,19 +11,119 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-hind-siliguri), var(--font-geist-sans), Arial, sans-serif;
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-primary: #D90048;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-hind-siliguri), var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  -webkit-overflow-scrolling: touch;
 }
+
+/* Native horizontal scroll — GPU-accelerated by browser compositor */
+.native-scroll {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  gap: 0.75rem;
+  padding-bottom: 0.25rem;
+}
+
+.native-scroll::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
+.native-scroll > * {
+  flex-shrink: 0;
+  scroll-snap-align: start;
+}
+
+/* Comet glow: a single dot that follows the border path sequentially */
+@keyframes comet-border {
+  /* Top-left corner — start moving RIGHT along top edge */
+  /* Top edge: moving RIGHT (long edge, takes more time) */
+  0%    { top: -140px; left: -140px; }
+  42%   { top: -140px; left: calc(100% - 140px); }
+  /* Right edge: moving DOWN (short edge, takes less time) */
+  50%   { top: calc(100% - 140px); left: calc(100% - 140px); }
+  /* Bottom edge: moving LEFT (long edge, takes more time) */
+  92%   { top: calc(100% - 140px); left: -140px; }
+  /* Left edge: moving UP (short edge, takes less time) */
+  100%  { top: -140px; left: -140px; }
+}
+
+.comet-glow {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .comet-glow {
+    display: block;
+    position: absolute;
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ec4899 0%, #8b5cf6 25%, transparent 60%);
+    filter: blur(16px);
+    animation: comet-border 7s linear infinite;
+    pointer-events: none;
+    z-index: 1;
+    /* Force GPU rendering to prevent scroll lag */
+    will-change: top, left;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+  }
+}
+
+/* GPU & scroll optimization helpers */
+.gpu-layer {
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.content-visibility-lazy {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 150px;
+}
+
+/* Utility to hide scrollbars globally */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Custom Sleek Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e4e4e7; /* tailwind zinc-200 */
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #d4d4d8; /* tailwind zinc-300 */
+}
+
+/* Firefox support */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #e4e4e7 transparent;
+}
+
+
