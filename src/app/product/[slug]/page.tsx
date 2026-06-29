@@ -402,7 +402,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const uniqueImages = Array.from(
     new Set(
       (dbGalleryImages.length > 0 ? dbGalleryImages : [product.image])
-        .map(img => img.replace('/260X372/', '/1104X1581/'))
+        .map(img => product.category !== 'book' ? img.replace('/260X372/', '/1104X1581/') : img)
     )
   );
 
