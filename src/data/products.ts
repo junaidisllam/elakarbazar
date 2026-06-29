@@ -14,7 +14,7 @@ export interface Product {
   highlights?: string[];
   specifications?: Record<string, string>;
   reviewSummary?: string;
-  url?: string;
+  affiliate_link?: string;
   categoryName?: string;
   categoryId?: number;
   stockStatus?: string;

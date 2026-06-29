@@ -111,12 +111,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   let product: Product | null = null;
   let productIdNum = 0;
   try {
-    let affiliateId = "";
-    const [settingsRows] = await pool.query("SELECT value FROM settings WHERE `key` = 'affiliate_id'");
-    if (Array.isArray(settingsRows) && settingsRows.length > 0) {
-      affiliateId = (settingsRows as any[])[0].value || "";
-    }
-
     const [rows] = await pool.query(`
       SELECT p.*, a.name as author_name, c.display_name as category_name
       FROM products p
@@ -133,21 +127,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         ? Math.round(((Number(row.original_price) - Number(row.current_price)) / Number(row.original_price)) * 100)
         : 0;
 
-      let finalUrl = row.url || "";
-      if (finalUrl && affiliateId) {
-        const cleanAffiliateId = affiliateId.startsWith("?") || affiliateId.startsWith("&")
-          ? affiliateId
-          : `?${affiliateId}`;
-
-        if (finalUrl.includes("?")) {
-          const suffix = cleanAffiliateId.startsWith("?") 
-            ? `&${cleanAffiliateId.slice(1)}` 
-            : cleanAffiliateId;
-          finalUrl = `${finalUrl}${suffix}`;
-        } else {
-          finalUrl = `${finalUrl}${cleanAffiliateId}`;
-        }
-      }
+      let finalUrl = row.affiliate_link || "";
 
       product = {
         id: String(row.id),
@@ -165,7 +145,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         highlights: row.highlights ? JSON.parse(row.highlights) : [],
         specifications: row.specifications ? JSON.parse(row.specifications) : undefined,
         reviewSummary: row.review_summary || undefined,
-        url: finalUrl || undefined,
+        affiliate_link: finalUrl || undefined,
         categoryName: row.category_name || undefined,
         categoryId: row.category_id || undefined,
         stockStatus: row.stock_status || undefined,
@@ -520,7 +500,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               productId={product.id}
               productTitle={product.title}
               productCategory={product.category}
-              url={product.url} 
+              affiliate_link={product.affiliate_link} 
               variants={product.variants}
               defaultPrice={product.price}
               defaultOriginalPrice={product.originalPrice}

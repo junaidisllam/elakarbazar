@@ -33,7 +33,7 @@ interface ProductActionsProps {
   productId?: string;
   productTitle?: string;
   productCategory?: string;
-  url?: string;
+  affiliate_link?: string;
   variants?: {
     formats?: FormatVariant[];
     colors?: any[];
@@ -50,7 +50,7 @@ export default function ProductActions({
   productId = "",
   productTitle = "",
   productCategory = "all",
-  url,
+  affiliate_link,
   variants,
   defaultPrice,
   defaultOriginalPrice,
@@ -251,11 +251,11 @@ export default function ProductActions({
       {/* Buy from Rokomari Button */}
       <div className="mt-2">
         <a
-          href={url || "https://www.rokomari.com"}
+          href={affiliate_link || "https://www.rokomari.com"}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => {
-            trackEvent('click_rokomari', `Product ID: ${productId} | Title: ${productTitle} | URL: ${url || 'https://www.rokomari.com'}`);
+            trackEvent('click_rokomari', `Product ID: ${productId} | Title: ${productTitle} | URL: ${affiliate_link || 'https://www.rokomari.com'}`);
           }}
           className="w-full bg-primary hover:bg-primary/95 text-white font-black py-3.5 sm:py-4 rounded-xl transition-colors flex items-center justify-center gap-2 h-auto text-sm sm:text-base shadow-lg shadow-primary/20 cursor-pointer border-none outline-none active:scale-95 text-center decoration-transparent no-underline"
         >
