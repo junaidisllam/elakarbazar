@@ -246,33 +246,33 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       FROM product_relations pr
       JOIN products p ON pr.related_product_id = p.id
       LEFT JOIN authors a ON p.author_id = a.id
-      WHERE pr.product_id = ?
+      WHERE pr.product_id = ? AND p.product_type = ?
       ORDER BY FIELD(pr.relation_type, 'related') DESC, p.id DESC
-      LIMIT 20
-    `, [productIdNum]);
+      LIMIT 24
+    `, [productIdNum, product.category]);
 
     let fetchedRows = relationRows as any[];
 
-    // 2. If we need more to reach 20, fill with same category_id products
-    if (fetchedRows.length < 20 && product.categoryId) {
+    // 2. If we need more to reach 24, fill with same category_id products
+    if (fetchedRows.length < 24 && product.categoryId) {
       const excludedIds = [productIdNum, ...fetchedRows.map(r => r.id)];
-      const limit = 20 - fetchedRows.length;
+      const limit = 24 - fetchedRows.length;
       const [categoryRows] = await pool.query(`
         SELECT p.*, a.name as author_name 
         FROM products p
         LEFT JOIN authors a ON p.author_id = a.id
-        WHERE p.category_id = ? AND p.id NOT IN (?)
+        WHERE p.category_id = ? AND p.product_type = ? AND p.id NOT IN (?)
         ORDER BY p.id DESC
         LIMIT ?
-      `, [product.categoryId, excludedIds, limit]);
+      `, [product.categoryId, product.category, excludedIds, limit]);
 
       fetchedRows = [...fetchedRows, ...(categoryRows as any[])];
     }
 
-    // 3. If we still need more to reach 20, fill with same product_type
-    if (fetchedRows.length < 20) {
+    // 3. If we still need more to reach 24, fill with same product_type
+    if (fetchedRows.length < 24) {
       const excludedIds = [productIdNum, ...fetchedRows.map(r => r.id)];
-      const limit = 20 - fetchedRows.length;
+      const limit = 24 - fetchedRows.length;
       const [typeRows] = await pool.query(`
         SELECT p.*, a.name as author_name 
         FROM products p
