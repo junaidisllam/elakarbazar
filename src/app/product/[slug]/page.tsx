@@ -479,6 +479,46 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     }))
   } : null;
 
+  const categoryName = product.category === 'book' ? 'বই কালেকশন' : 
+                       product.category === 'calculator' ? 'ক্যালকুলেটর' :
+                       product.category === 'fan' ? 'মিনি ফ্যান' :
+                       product.category === 'watch' ? 'ঘড়ি কালেকশন' :
+                       product.category === 'headphone' ? 'প্রিমিয়াম হেডফোন' :
+                       (product.category === 'product' && product.categoryName) ? product.categoryName : 'অন্যান্য';
+
+  const categoryUrl = product.categoryId 
+    ? `https://elakarbazar.com/category/${product.categoryId}` 
+    : `https://elakarbazar.com/?category=${product.category}`;
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://elakarbazar.com"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": categoryName,
+        "item": categoryUrl
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": product.title,
+        "item": `https://elakarbazar.com/product/${product.slug}`
+      }
+    ]
+  };
+
+  const h1Text = product.category === 'book'
+    ? `Buy ${product.title} Online in Bangladesh`
+    : `Buy ${product.title} at Best Price in Bangladesh`;
+
   return (
     <main className="w-full bg-zinc-50/50 min-h-screen pt-4 pb-16 font-sans">
       <script
@@ -491,6 +531,10 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
         />
       )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <div className="max-w-7xl mx-auto px-0 sm:px-6 lg:px-8">
         
         {/* Breadcrumbs */}
@@ -501,12 +545,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           </Link>
           <ChevronRight className="h-3.5 w-3.5 text-zinc-400 flex-shrink-0" />
           <Link href={product.categoryId ? `/category/${product.categoryId}` : `/?category=${product.category}`} className="hover:text-primary transition-colors">
-            {product.category === 'book' ? 'বই কালেকশন' : 
-             product.category === 'calculator' ? 'ক্যালকুলেটর' :
-             product.category === 'fan' ? 'মিনি ফ্যান' :
-             product.category === 'watch' ? 'ঘড়ি কালেকশন' :
-             product.category === 'headphone' ? 'প্রিমিয়াম হেডফোন' :
-             (product.category === 'product' && product.categoryName) ? product.categoryName : 'অন্যান্য'}
+            {categoryName}
           </Link>
           <ChevronRight className="h-3.5 w-3.5 text-zinc-400 flex-shrink-0" />
           <span className="text-zinc-800 font-bold truncate max-w-[150px] sm:max-w-none">
@@ -535,19 +574,14 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             {/* Category Tag */}
             <div>
               <span className="inline-block bg-primary/10 text-primary text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                {product.category === 'book' ? 'বই কালেকশন' : 
-                 product.category === 'calculator' ? 'ক্যালকুলেটর' :
-                 product.category === 'fan' ? 'মিনি ফ্যান' :
-                 product.category === 'watch' ? 'ঘড়ি কালেকশন' :
-                 product.category === 'headphone' ? 'প্রিমিয়াম হেডফোন' :
-                 (product.category === 'product' && product.categoryName) ? product.categoryName : 'অন্যান্য'}
+                {categoryName}
               </span>
             </div>
 
             {/* Title & Author */}
             <div className="flex flex-col gap-1">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-zinc-900 leading-tight">
-                {product.title}
+                {h1Text}
               </h1>
               {product.author && (
                 <p className="text-xs sm:text-sm text-zinc-500 font-medium">
