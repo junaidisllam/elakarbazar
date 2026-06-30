@@ -276,17 +276,7 @@ export default function ProductImageGallery({ primaryImage, title, category, dis
           <span>প্রি-অর্ডার</span>
         </div>
       )}
-      {/* Dot Indicators - only for non‑book */}
-      {!isBook && images.length > 1 && (
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/15 backdrop-blur-[2px] px-2.5 py-1.5 rounded-full pointer-events-none">
-          {images.map((_, idx) => (
-            <div
-              key={idx}
-              className={`h-1.5 rounded-full transition-all duration-200 ${idx === mobileActiveIndex ? 'w-3.5 bg-white' : 'w-1.5 bg-white/50'}`}
-            />
-          ))}
-        </div>
-      )}
+
 
       {/* Main Image Viewer (Desktop) */}
       <div 
