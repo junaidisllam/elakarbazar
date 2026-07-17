@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Copy,
   Check,
@@ -60,6 +60,45 @@ export default function ProductActions({
   isPreorder
 }: ProductActionsProps) {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [isInlineVisible, setIsInlineVisible] = useState(false);
+  const buttonRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    if (!mediaQuery.matches) {
+      setIsInlineVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInlineVisible(true);
+        } else {
+          const rect = entry.boundingClientRect;
+          if (rect.top > (window.innerHeight || document.documentElement.clientHeight)) {
+            // Below the viewport
+            setIsInlineVisible(false);
+          } else {
+            // Above the viewport
+            setIsInlineVisible(true);
+          }
+        }
+      },
+      { threshold: 0 }
+    );
+
+    const currentButton = buttonRef.current;
+    if (currentButton) {
+      observer.observe(currentButton);
+    }
+
+    return () => {
+      if (currentButton) {
+        observer.unobserve(currentButton);
+      }
+    };
+  }, []);
 
   // Default to first variant if present, or null
   const hasFormats = variants?.formats && variants.formats.length > 0;
@@ -248,8 +287,31 @@ export default function ProductActions({
         </div>
       ) : null}
 
-      {/* Buy from Rokomari Button */}
-      <div className="mt-2">
+      {/* 1. Natural Inline Rokomari Button */}
+      <div 
+        ref={buttonRef}
+        className="mt-2"
+      >
+        <a
+          href={affiliate_link || "https://www.rokomari.com"}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => {
+            trackEvent('click_rokomari', `Product ID: ${productId} | Title: ${productTitle} | URL: ${affiliate_link || 'https://www.rokomari.com'}`);
+          }}
+          className="w-full bg-primary hover:bg-primary/95 text-white font-black py-3.5 sm:py-4 rounded-xl transition-colors flex items-center justify-center gap-2 h-auto text-sm sm:text-base shadow-lg shadow-primary/20 cursor-pointer border-none outline-none active:scale-95 text-center decoration-transparent no-underline"
+        >
+          <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5" />
+          <span>রকমারি থেকে কিনুন</span>
+        </a>
+      </div>
+
+      {/* 2. Floating Sticky Rokomari Button (Mobile Only) */}
+      <div className={`fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xs py-3 px-4 border-t border-zinc-200 md:hidden transition-all duration-300 ${
+        isInlineVisible 
+          ? "opacity-0 translate-y-full pointer-events-none" 
+          : "opacity-100 translate-y-0"
+      }`}>
         <a
           href={affiliate_link || "https://www.rokomari.com"}
           target="_blank"
